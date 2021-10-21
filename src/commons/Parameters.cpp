@@ -218,6 +218,7 @@ Parameters::Parameters():
         PARAM_ALPHA(PARAM_ALPHA_ID, "--alpha", "Alpha", "Set alpha for combining p-values during aggregation", typeid(float), (void *) &alpha, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_SHORT_OUTPUT(PARAM_SHORT_OUTPUT_ID, "--short-output", "Short output", "The output database will contain only the spread p-value", typeid(bool), (void *) &shortOutput, ""),
         PARAM_AGGREGATION_MODE(PARAM_AGGREGATION_MODE_ID, "--aggregation-mode", "Aggregation mode", "Combined P-values computed from 0: multi-hit, 1: minimum of all P-values, 2: product-of-P-values, 3: truncated product", typeid(int), (void *) &aggregationMode, "^[0-4]{1}$"),
+        PARAM_BESTHIT_PVAL(PARAM_BESTHIT_PVAL_ID, "--besthit-pval", "Besthit P-value cutoff", "Multihit best hit P-value threshold for clustering", typeid(float), (void *) &bhPvalThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         // concatdb
         PARAM_PRESERVEKEYS(PARAM_PRESERVEKEYS_ID, "--preserve-keys", "Preserve the keys", "The keys of the two DB should be distinct, and they will be preserved in the concatenation", typeid(bool), (void *) &preserveKeysB, ""),
         PARAM_TAKE_LARGER_ENTRY(PARAM_TAKE_LARGER_ENTRY_ID, "--take-larger-entry", "Take the larger entry", "Only keep the larger entry (dataSize >) in the concatenation, both databases need the same keys in the index", typeid(bool), (void *) &takeLargerEntry, ""),
@@ -797,12 +798,23 @@ Parameters::Parameters():
 
 
     // combinepvalperset
-    combinepvalbyset.push_back(&PARAM_ALPHA);
-    combinepvalbyset.push_back(&PARAM_AGGREGATION_MODE);
-//    combinepvalperset.push_back(&PARAM_SHORT_OUTPUT);
-    combinepvalbyset.push_back(&PARAM_THREADS);
-    combinepvalbyset.push_back(&PARAM_COMPRESSED);
-    combinepvalbyset.push_back(&PARAM_V);
+    combinepvalperset.push_back(&PARAM_ALPHA);
+    combinepvalperset.push_back(&PARAM_AGGREGATION_MODE);
+    // combinepvalperset.push_back(&PARAM_SHORT_OUTPUT);
+    combinepvalperset.push_back(&PARAM_THREADS);
+    combinepvalperset.push_back(&PARAM_COMPRESSED);
+    combinepvalperset.push_back(&PARAM_V);
+
+    filtermatches.push_back(&PARAM_BESTHIT_PVAL);
+    filtermatches.push_back(&PARAM_ALPHA);
+    filtermatches.push_back(&PARAM_THREADS);
+    filtermatches.push_back(&PARAM_COMPRESSED);
+    filtermatches.push_back(&PARAM_V);
+
+
+    clusterhits.push_back(&PARAM_THREADS);
+    clusterhits.push_back(&PARAM_COMPRESSED);
+    clusterhits.push_back(&PARAM_V);
 
 
     // offsetalignment
@@ -1227,10 +1239,11 @@ Parameters::Parameters():
     multihitdb = combineList(createdb, extractorfs);
     multihitdb = combineList(multihitdb, extractorfs);
     multihitdb = combineList(multihitdb, translatenucs);
-    multihitdb = combineList(multihitdb, result2stats);
+    multihitdb = combineList(multihitdb, gff2db);
 
     // multi hit search
     multihitsearch = combineList(searchworkflow, besthitbyset);
+    multihitsearch = combineList(multihitsearch, combinepvalperset);
 
     clusterUpdateSearch = removeParameter(searchworkflow, PARAM_MAX_SEQS);
     clusterUpdateClust = removeParameter(clusterworkflow, PARAM_MAX_SEQS);
@@ -2284,6 +2297,7 @@ void Parameters::setDefaults() {
     alpha = 1;
     shortOutput = false;
     aggregationMode = 0;
+    bhPvalThr = 0.0001;
 
     // concatdbs
     preserveKeysB = false;

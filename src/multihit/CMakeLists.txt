@@ -11,5 +11,7 @@ set(multihit_source_files
         multihit/Aggregation.cpp
         multihit/MultiHitDb.cpp
         multihit/MultiHitSearch.cpp
+        multihit/ClusterHits.cpp
+        multihit/FilterMatches.cpp
         PARENT_SCOPE
         )

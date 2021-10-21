@@ -9,18 +9,18 @@
 void setMultiHitSearchWorkflowDefaults(Parameters *p) {
     p->sensitivity = 5.7;
     // TODO: Check query cov maybe?
-    // p->covThr = 0.7;
-    p->evalThr = 100;
+    p->covThr = 0.8;
+    p->evalThr = 10;
 
     // TODO: Needs to be more than the count of target sets (10x?)
     p->maxSequences = 1500;
 
     // TODO: Why??
     //p->scoreBias = 0.3;
-    
-    p->simpleBestHit = true;
+    p->simpleBestHit = false;
+    p->alpha = 1;
     // TODO: add a minimum alignment length cutoff, 4 residue alignments dont seem useful
-
+    p->alnLenThr = 30;
     // Set alignment mode
     p->alignmentMode = Parameters::ALIGNMENT_MODE_SCORE_COV; 
 }
@@ -77,6 +77,7 @@ int multihitsearch(int argc, const char **argv, const Command &command) {
     }
     cmd.addVariable("SEARCH_PAR", par.createParameterString(par.searchworkflow).c_str());
     cmd.addVariable("BESTHITBYSET_PAR", par.createParameterString(par.besthitbyset).c_str());
+    cmd.addVariable("COMBINEPVALPERSET_PAR", par.createParameterString(par.combinepvalperset).c_str());
     cmd.addVariable("THREADS_PAR", par.createParameterString(par.onlythreads).c_str());
     cmd.addVariable("VERBOSITY", par.createParameterString(par.onlyverbosity).c_str());
 

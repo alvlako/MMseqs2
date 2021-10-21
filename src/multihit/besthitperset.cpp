@@ -52,11 +52,11 @@ public :
             if (pval == 0) {
                 pval = DBL_MIN;
             }
-            double score = -log(pval);
+            double score = -log(eval);
 
             //if only one hit use simple best hit
             if(simpleBestHitMode ||dataToAggregate.size() < 2) {
-                if(bestEval > eval){
+                if( eval < bestEval){
                     bestEval = eval;
                     bestEntry = &dataToAggregate[i];
                 }

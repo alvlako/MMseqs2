@@ -44,8 +44,12 @@ int multihitdb(int argc, const char **argv, const Command &command) {
     std::string outDb = par.filenames.back();
     par.filenames.pop_back();
 
+    std::string gffDir = par.filenames.back();
+    par.filenames.pop_back();    
+
     CommandCaller cmd;
     cmd.addVariable("OUTDB", outDb.c_str());
+    cmd.addVariable("GFFDIR", gffDir.c_str());
     cmd.addVariable("TMP_PATH", tmpDir.c_str());
 
     if (par.removeTmpFiles) {
@@ -53,6 +57,7 @@ int multihitdb(int argc, const char **argv, const Command &command) {
     }
 
     cmd.addVariable("CREATEDB_PAR", par.createParameterString(par.createdb).c_str());
+    cmd.addVariable("GFF2DB_PAR", par.createParameterString(par.gff2db).c_str());
     cmd.addVariable("EXTRACTORFS_PAR", par.createParameterString(par.extractorfs).c_str());
     cmd.addVariable("TRANSLATENUCS_PAR", par.createParameterString(par.translatenucs).c_str());
     cmd.addVariable("SWAPDB_PAR", par.createParameterString(par.swapdb).c_str());

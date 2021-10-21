@@ -564,6 +564,7 @@ public:
     float alpha;
     bool shortOutput;
     int aggregationMode;
+    float bhPvalThr;
 
     // mergedbs
     std::string mergePrefixes;
@@ -887,6 +888,7 @@ public:
     PARAMETER(PARAM_ALPHA)
     PARAMETER(PARAM_SHORT_OUTPUT)
     PARAMETER(PARAM_AGGREGATION_MODE)
+    PARAMETER(PARAM_BESTHIT_PVAL)
 
     // concatdb
     PARAMETER(PARAM_PRESERVEKEYS)
@@ -1080,7 +1082,9 @@ public:
     std::vector<MMseqsParameter*> profile2seq;
     std::vector<MMseqsParameter*> profile2cs;
     std::vector<MMseqsParameter*> besthitbyset;
-    std::vector<MMseqsParameter*> combinepvalbyset;
+    std::vector<MMseqsParameter*> combinepvalperset;
+    std::vector<MMseqsParameter*> filtermatches;
+    std::vector<MMseqsParameter*> clusterhits;
     std::vector<MMseqsParameter*> multihitdb;
     std::vector<MMseqsParameter*> multihitsearch;
     std::vector<MMseqsParameter*> expandaln;
