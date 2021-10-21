@@ -28,11 +28,7 @@ threads(threads), dataMode(dataMode), dataFileName(strdup(dataFileName_)),
         totalDataSize(0), dataSize(0), lastKey(T()), closed(1), dbtype(Parameters::DBTYPE_GENERIC_DB),
         compressedBuffers(NULL), compressedBufferSizes(NULL), index(NULL), id2local(NULL), local2id(NULL),
         dataMapped(false), accessType(0), externalData(false), didMlock(false)
-{
-    if (threads > 1) {
-        FileUtil::fixRlimitNoFile();
-    }
-}
+{}
 
 template <typename T>
 DBReader<T>::DBReader(DBReader<T>::Index *index, size_t size, size_t dataSize, T lastKey,
@@ -540,7 +536,7 @@ template <typename T> char* DBReader<T>::getDataCompressed(size_t id, int thrIdx
 
 template <typename T> size_t DBReader<T>::getAminoAcidDBSize() {
     checkClosed();
-    if (Parameters::isEqualDbtype(dbtype, Parameters::DBTYPE_HMM_PROFILE) || Parameters::isEqualDbtype(dbtype, Parameters::DBTYPE_PROFILE_STATE_PROFILE)) {
+    if (Parameters::isEqualDbtype(dbtype, Parameters::DBTYPE_HMM_PROFILE)){
         // Get the actual profile column without the null byte per entry
         return (dataSize / Sequence::PROFILE_READIN_SIZE) - size;
     } else {
@@ -721,7 +717,7 @@ template <typename T> size_t DBReader<T>::maxCount(char c) {
     if (compression == COMPRESSED) {
         size_t entries = getSize();
 #ifdef OPENMP
-        size_t localThreads = std::min(entries, static_cast<size_t>(threads));
+        size_t localThreads = std::max(std::min(entries, static_cast<size_t>(threads)), (size_t)1);
 #endif
 #pragma omp parallel num_threads(localThreads)
         {
@@ -1090,15 +1086,12 @@ void DBReader<T>::removeDb(const std::string &databaseName){
     }
 }
 
-void copyLinkDb(const std::string &databaseName, const std::string &outDb, DBFiles::Files dbFilesFlags, bool link) {
+typedef void (*DbAction)(const std::string &, const std::string &);
+void copyLinkDb(const std::string &databaseName, const std::string &outDb, DBFiles::Files dbFilesFlags, DbAction action) {
     if (dbFilesFlags & DBFiles::DATA) {
         std::vector<std::string> names = FileUtil::findDatafiles(databaseName.c_str());
         if (names.size() == 1) {
-            if (link) {
-                FileUtil::symlinkAbs(names[0].c_str(), outDb.c_str());
-            } else {
-                FileUtil::copyFile(names[0].c_str(), outDb.c_str());
-            }
+            action(names[0], outDb);
         } else {
             for (size_t i = 0; i < names.size(); i++) {
                 std::string::size_type idx = names[i].rfind('.');
@@ -1110,11 +1103,7 @@ void copyLinkDb(const std::string &databaseName, const std::string &outDb, DBFil
                                         << "Filename: " << names[i] << ".\n";
                     EXIT(EXIT_FAILURE);
                 }
-                if (link) {
-                    FileUtil::symlinkAbs(names[i], outDb + ext);
-                } else {
-                    FileUtil::copyFile(names[i].c_str(), (outDb + ext).c_str());
-                }
+                action(names[i], outDb + ext);
             }
         }
     }
@@ -1136,6 +1125,7 @@ void copyLinkDb(const std::string &databaseName, const std::string &outDb, DBFil
         { DBFiles::TAX_NAMES,     "_names.dmp"        },
         { DBFiles::TAX_NODES,     "_nodes.dmp"        },
         { DBFiles::TAX_MERGED,    "_merged.dmp"       },
+        { DBFiles::TAX_MERGED,    "_taxonomy"         },
         { DBFiles::CA3M_DATA,     "_ca3m.ffdata"      },
         { DBFiles::CA3M_INDEX,    "_ca3m.ffindex"     },
         { DBFiles::CA3M_SEQ,      "_sequence.ffdata"  },
@@ -1147,24 +1137,24 @@ void copyLinkDb(const std::string &databaseName, const std::string &outDb, DBFil
     for (size_t i = 0; i < ARRAY_SIZE(suffices); ++i) {
         std::string file = databaseName + suffices[i].suffix;
         if (dbFilesFlags & suffices[i].flag && FileUtil::fileExists(file.c_str())) {
-            if (link) {
-                FileUtil::symlinkAbs(file, outDb + suffices[i].suffix);
-            } else {
-                FileUtil::copyFile(file.c_str(), (outDb + suffices[i].suffix).c_str());
-            }
+            action(file, outDb + suffices[i].suffix);
         }
     }
 }
 
+template<typename T>
+void DBReader<T>::aliasDb(const std::string &databaseName, const std::string &alias, DBFiles::Files dbFilesFlags) {
+    copyLinkDb(databaseName, alias, dbFilesFlags, FileUtil::symlinkAlias);
+}
 
 template<typename T>
 void DBReader<T>::softlinkDb(const std::string &databaseName, const std::string &outDb, DBFiles::Files dbFilesFlags) {
-    copyLinkDb(databaseName, outDb, dbFilesFlags, true);
+    copyLinkDb(databaseName, outDb, dbFilesFlags, FileUtil::symlinkAbs);
 }
 
 template<typename T>
 void DBReader<T>::copyDb(const std::string &databaseName, const std::string &outDb, DBFiles::Files dbFilesFlags) {
-    copyLinkDb(databaseName, outDb, dbFilesFlags, false);
+    copyLinkDb(databaseName, outDb, dbFilesFlags, FileUtil::copyFile);
 }
 
 template<typename T>
