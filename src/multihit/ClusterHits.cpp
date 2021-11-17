@@ -11,6 +11,8 @@
 #endif
 
 struct hit{
+    unsigned int qId;
+    unsigned int tId;
     unsigned int qPos;
     unsigned int tPos;
     bool qStrand;
@@ -40,9 +42,9 @@ double hypergeoDistribution(double* lookup, int k, int n, int N, int K){
 }
 
 double clusterPval(double* lookup, int k, int m, int K, int Nq, int Nt) {
-    int minKm = (K < m) ? K : m;
+    size_t minKm = (K < m) ? K : m;
     double sum = 0;
-    for (int Kp = k; Kp < minKm; Kp++){
+    for (size_t Kp = k; Kp <= minKm; Kp++){
         double pHG = hypergeoDensity(lookup, (Kp - 1), (K - 1), (Nq - 1), (m - 1));
         double PHG = hypergeoDistribution(lookup, (k - 2), (Kp - 1), (Nt - 1), (m - 1));
         sum += pHG * (1 - pow(PHG, k));
@@ -73,7 +75,6 @@ int findSpan(const std::vector<hit> &cluster){
         jMax = (cluster[l].tPos > jMax) ? cluster[l].tPos : jMax;
         jMin = (cluster[l].tPos < jMin) ? cluster[l].tPos : jMin;
     }
-    //index 1 and 2 has a span of 2
     int spanI =iMax - iMin + 1;
     int spanJ =jMax - jMin + 1;
     return (spanI > spanJ) ? spanI : spanJ;
@@ -94,40 +95,88 @@ int findConservedPairs(std::vector<hit> &cluster){
     return m;
 }
 
-double orderingPval_fast(const std::vector<hit> &cluster){
-    bool isSameOrder = (cluster[1].qPos > cluster[0].qPos) ? (cluster[1].tPos > cluster[0].tPos) : (cluster[1].tPos < cluster[0].tPos) ;
-    bool isConservedPair = ((cluster[0].qStrand == cluster[0].tStrand) == isSameOrder ) && ((cluster[1].qStrand == cluster[1].tStrand) == isSameOrder );
-    return isConservedPair ? 0.25 : 1.0;
-}
-
-
 double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int Nq, int Nt){
-    int span = findSpan(cluster);
-    int k = cluster.size();
-    double pClu;
-    double pOrd;
-    if(k == 2){
-        pClu = clusterPval_fast(span, K, Nq, Nt);
-        pOrd = orderingPval_fast(cluster);
+    if(cluster.size()== 0 ){
+        return 0.0;
     }
-    else{
-        pClu = clusterPval(lookup, k, span, K, Nq, Nt);
+    else {
+        int span = findSpan(cluster);
+        int k = cluster.size();
+        double pClu;
+        double pOrd;
         int m = findConservedPairs(cluster);
-        pOrd = orderingPval(k, m);
+        if(k == 2){
+            pClu = clusterPval_fast(span, K, Nq, Nt);
+            pOrd = orderingPval(k, m);
+        }
+        else{
+            pClu = clusterPval(lookup, k, span, K, Nq, Nt);
+            pOrd = orderingPval(k, m);
+        }
+        
+        //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
+        return -log(pClu)- log(pOrd);
     }
-
-    //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
-    return -log(pClu) - log(pOrd); 
 }
 
-std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const std::vector<hit> &matchList, int i, int j){
+// std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const std::vector<hit> &matchList, int i, int j){
+//     std::vector<hit> cluster;
+//     //check if one node is empty, if so return an empty cluster
+//     if(nodeList[i].size() != 0 && nodeList[j].size() != 0 ){
+//         for(size_t m = 0; m < nodeList[i].size(); m++){
+//             cluster.push_back(matchList[nodeList[i][m]]);
+//         }
+//         for(size_t n = 0; n < nodeList[j].size(); n++){
+//             cluster.push_back(matchList[nodeList[j][n]]);
+//         }
+//     }
+//     return cluster;
+// }
+
+//TODO: make this step more efficient
+bool isCompatibleCluster(std::vector<hit> &cluster1, std::vector<hit> &cluster2, unsigned int d){
+    unsigned int iMax1 = 0;
+    unsigned int iMin1 = INT_MAX;
+    unsigned int jMax1 = 0;
+    unsigned int jMin1 = INT_MAX;
+    for (size_t l = 0; l < cluster1.size(); l++){
+        iMax1 = (cluster1[l].qPos > iMax1) ? cluster1[l].qPos : iMax1;
+        iMin1 = (cluster1[l].qPos < iMin1) ? cluster1[l].qPos : iMin1;
+        jMax1 = (cluster1[l].tPos > jMax1) ? cluster1[l].tPos : jMax1;
+        jMin1 = (cluster1[l].tPos < jMin1) ? cluster1[l].tPos : jMin1;
+    }
+    unsigned int iMax2 = 0;
+    unsigned int iMin2 = INT_MAX;
+    unsigned int jMax2 = 0;
+    unsigned int jMin2 = INT_MAX;
+    for (size_t l = 0; l < cluster2.size(); l++){
+        iMax2 = (cluster2[l].qPos > iMax2) ? cluster2[l].qPos : iMax2;
+        iMin2 = (cluster2[l].qPos < iMin2) ? cluster2[l].qPos : iMin2;
+        jMax2 = (cluster2[l].tPos > jMax2) ? cluster2[l].tPos : jMax2;
+        jMin2 = (cluster2[l].tPos < jMin2) ? cluster2[l].tPos : jMin2;
+    }
+    return (std::min(jMin1-jMax2,jMin2-jMax1) <= d && std::min(iMin1-iMax2,iMin2-iMax1) <= d);
+}
+
+
+std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const std::vector<hit> &matchList, int i, int j, unsigned int d){
+    std::vector<hit> cluster1;
+    std::vector<hit> cluster2;
     std::vector<hit> cluster;
-    for(size_t m = 0; m < nodeList[i].size(); m++){
-        cluster.push_back(matchList[nodeList[i][m]]);
+    //check if one node is empty or two nodes are incompatible, if so return an empty cluster
+    if(nodeList[i].size() != 0 && nodeList[j].size() != 0 ){
+        for(size_t m = 0; m < nodeList[i].size(); m++){
+            cluster1.push_back(matchList[nodeList[i][m]]);
+        }
+        for(size_t n = 0; n < nodeList[j].size(); n++){
+            cluster2.push_back(matchList[nodeList[j][n]]);
+        }
+        if(isCompatibleCluster(cluster1,cluster2,d)){
+            cluster.insert(cluster.begin(), cluster1.begin(), cluster1.end());
+            cluster.insert(cluster.end(), cluster2.begin(), cluster2.end());
+        }
     }
-    for(size_t n = 0; n < nodeList[j].size(); n++){
-        cluster.push_back(matchList[nodeList[j][n]]);
-    }
+
     return cluster;
 }
 
@@ -135,7 +184,6 @@ std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const
 int clusterhits(int argc, const char **argv, const Command &command) {
     Parameters &par = Parameters::getInstance();
     par.parseParameters(argc, argv, command, true, 0, 0);
-
 
     std::string sizeDBName = std::string(par.db1) + "_set_size";
     std::string sizeDBIndex = std::string(par.db1) + "_set_size.index";
@@ -161,9 +209,11 @@ int clusterhits(int argc, const char **argv, const Command &command) {
     DBReader<unsigned int> headerReader(par.hdr3.c_str(), par.hdr3Index.c_str(), par.threads, DBReader<unsigned int>::USE_INDEX|DBReader<unsigned int>::USE_DATA);
     headerReader.open(DBReader<unsigned int>::LINEAR_ACCCESS);
 
-    DBWriter dbw(par.db4.c_str(), par.db4Index.c_str(), par.threads, par.compressed, resultReader.getDbtype());
-    dbw.open();
+    DBWriter writer(par.db4.c_str(), par.db4Index.c_str(), par.threads, par.compressed, resultReader.getDbtype());
+    writer.open();
 
+    DBWriter headerWriter(par.hdr4.c_str(), par.hdr4Index.c_str(), par.threads,  par.compressed, Parameters::DBTYPE_GENERIC_DB);
+    headerWriter.open();
     //find the max number of genes/ORFs of Nq&Nt
     //TODO: can we do that faster by scanning the header file?
     unsigned int maxOrfCount = 0;
@@ -196,9 +246,15 @@ Debug::Progress progress(resultReader.getSize());
 #endif
         std::string buffer;
         buffer.reserve(10 * 1024);
+        std::string headerBuffer;
+        buffer.reserve(10 * 1024);
         std::string header;
         header.reserve(1024);
         const char *entry[255];
+        unsigned int cluster_idx = 0;
+
+
+        const unsigned int d = 3; //par.maxGaps, d is the maximum number of genes allowed between two clusters to merge
 #pragma omp for schedule(dynamic, 10)
         for (size_t i = 0; i < resultReader.getSize(); ++i) {
             progress.updateProgress();
@@ -208,13 +264,17 @@ Debug::Progress progress(resultReader.getSize());
             //from result header file read Nq & Nt
             header = headerReader.getData(i, thread_idx);
             std::vector<std::string>  hdrcolumns = Util::split(header, "\t");
+            unsigned int qSet = Util::fast_atoi<size_t>(hdrcolumns[0].c_str());
+            unsigned int tSet = Util::fast_atoi<size_t>(hdrcolumns[1].c_str());
             unsigned int Nq = Util::fast_atoi<size_t>(hdrcolumns[4].c_str()); //query set size
             unsigned int Nt = Util::fast_atoi<size_t>(hdrcolumns[5].c_str()); //target set size
+            hdrcolumns.clear();
+            header.clear();
 
             //read all hits from a match and extract pos and strand, append them to std::vector<hit> match
             char *data = resultReader.getData(i, thread_idx);
             while (*data != '\0'){
-                //TODO: read first two column for qid and tid, get entryName from lookups
+                //read first two column for qid and tid, get entryName from lookups
                 size_t columns = Util::getWordsOfLine(data, entry, 255);
                 data = Util::skipLine(data);
                 if (columns < 2) {
@@ -224,31 +284,33 @@ Debug::Progress progress(resultReader.getSize());
                 unsigned int qid = Util::fast_atoi<unsigned int>(entry[0]);
                 unsigned int tid = Util::fast_atoi<unsigned int>(entry[1]);
 
-                //TODO: from seqid get entryName in lookup, split by "_" and retrieve info
+                //from seqid get entryName in lookup, split by "_" and retrieve info
                 std::vector<std::string> qcolumns = Util::split(qlookup[qid].entryName, "_");
                 std::vector<std::string> tcolumns = Util::split(tlookup[tid].entryName, "_");
                 int qStart = Util::fast_atoi<size_t>(qcolumns[qcolumns.size()-2].c_str());
                 int qEnd = Util::fast_atoi<size_t>(qcolumns.back().c_str());
                 int tStart = Util::fast_atoi<size_t>(tcolumns[tcolumns.size()-2].c_str());
                 int tEnd = Util::fast_atoi<size_t>(tcolumns.back().c_str());
-                hit tmpBuffer;
+                hit tmpHit;
 
                 //pos is the protein index in the genome, strand is determined by start and end coordinates
-                tmpBuffer.qPos = Util::fast_atoi<size_t>(qcolumns[qcolumns.size()-3].c_str());
-                tmpBuffer.tPos = Util::fast_atoi<size_t>(tcolumns[tcolumns.size()-3].c_str());
-                tmpBuffer.qStrand = (qStart < qEnd) ? 1 : 0;
-                tmpBuffer.tStrand = (tStart < tEnd) ? 1 : 0;
+                tmpHit.qId = qid;
+                tmpHit.tId = tid;
+                tmpHit.qPos = Util::fast_atoi<size_t>(qcolumns[qcolumns.size()-3].c_str());
+                tmpHit.tPos = Util::fast_atoi<size_t>(tcolumns[tcolumns.size()-3].c_str());
+                tmpHit.qStrand = (qStart < qEnd) ? 1 : 0;
+                tmpHit.tStrand = (tStart < tEnd) ? 1 : 0;
 
-                match.push_back(tmpBuffer);
+                match.push_back(tmpHit);
             }
 
             //TODO: total number of hits can be read from the header
             //int K = Util::fast_atoi<int>(hdrcolumns[3].c_str());//total number of hits
-            int K = match.size();
+            size_t K = match.size(); 
 
             //initiallize distance matrix to be [K][K]
             double** DistMat = new double*[K]; // Rows
-            for (int i = 0; i < K; i++)
+            for (size_t i = 0; i < K; i++)
             {
                 DistMat[i] = new double[K]; // Columns
             }
@@ -256,31 +318,34 @@ Debug::Progress progress(resultReader.getSize());
             std::vector<int> dmin(K); //index of closest cluster/highest score
             std::vector<std::vector<int>> nodes(K);
             //assign each node with the index of the singleton cluster
-            for(int n = 0; n < K; n++){
+            for(size_t n = 0; n < K; n++){
                 nodes[n].push_back(n);
             }
 
-            for(int i = 0; i < K; i++){
-                for(int j = 0; j < K; j++){
+            for(size_t i = 0; i < K; i++){
+                for(size_t j = 0; j < K; j++){
                     if(i == j){
                         DistMat[i][j] = 0.0; //set score = 0 to self similarities
                     }
                     else{
-                        std::vector<hit> tmpCluster = groupNodes(nodes,match,i,j);
-                        DistMat[i][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt); //score(i,j)
+                        std::vector<hit> tmpCluster = groupNodes(nodes,match,i,j,d);
+                        DistMat[i][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt);//score(i,j)
                     }
                     dmin[i] = (DistMat[i][j] > DistMat[i][dmin[i]]) ? j : dmin[i];
                 }
             }
 
+            //Score is determined by the maxscore in the first iteration, due to varying Nq & Nt      
             double maxScore = DBL_MAX;
-            while(maxScore > 1){ //par.sMin
-                int i1 = 0;
-                int i2;
+            bool isFirstIter = true;
+            double sMin  = DBL_MAX;
+            while(isFirstIter|| (maxScore >= sMin)){
+                size_t i1 = 0;
+                size_t i2;
                 //find closest pair of clusters (i1,i2), i.e pair of clusters with highest score
-                for(int s = 0; s < K-1; s++){
+                for(size_t s = 0; s < K-1; s++){
                     i1 = 0;
-                    for (int i = 0; i < K; i++){
+                    for (size_t i = 0; i < K; i++){
                         i1 = (DistMat[i][dmin[i]] > DistMat[i1][dmin[i1]]) ? i : i1;
                     }
                     i2 = dmin[i1];
@@ -288,17 +353,22 @@ Debug::Progress progress(resultReader.getSize());
 
                 maxScore = DistMat[i1][i2];
 
-                //delete node i2 and add i2 to i1
+                
+                //delete node i2 and append all elements in i2 to i1
+                for(size_t n = 0; n < nodes[i2].size() ;n++){
+                    nodes[i1].push_back(nodes[i2][n]);
+                }
                 nodes[i2].clear();
-                nodes[i1].push_back(i2);
-                    
+
+
                 //overwrite row and column i1 with dist[i1,i2][j]
-                for(int j = 0; j < K; j++){
-                    if(i1 == j){
+                for(size_t j = 0; j < K; j++){
+                    if(i1 == j || i2 == j){
                         DistMat[i1][j] = 0.0; 
+                        DistMat[j][i1] = 0.0; 
                     }
                     else{
-                        std::vector<hit> tmpCluster = groupNodes(nodes,match,i1,j);
+                        std::vector<hit> tmpCluster = groupNodes(nodes,match,i1,j,d);
                         DistMat[i1][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt);
                         DistMat[j][i1] = DistMat[i1][j];
                     }
@@ -308,7 +378,12 @@ Debug::Progress progress(resultReader.getSize());
                     DistMat[j][i2] = 0.0;
 
                     //for row i1 find index dmin[i1] of closest cluster
-                    dmin[i1] = (DistMat[i1][j] > DistMat[i1][dmin[i1]]) ? j : dmin[i1];
+                    if(j != 0){
+                        dmin[i1] = (DistMat[i1][j] > DistMat[i1][dmin[i1]]) ? j : dmin[i1];
+                    } else {
+                        dmin[i1] = j;
+                    }
+                    
                     
                     //for every other row j != i1 && j != i2 compare the new score DistMat[j][i1] with DistMat[j][dmin[j]]
                     if(j != i1 && j != i2) {
@@ -316,19 +391,56 @@ Debug::Progress progress(resultReader.getSize());
                     }
 
                 }
-                
+                if(isFirstIter){
+                    sMin = maxScore;
+                    isFirstIter = false;
+                }
             }
 
+            //print qid & tid of clusters with >=2 hits and cluster + order P-values greater than thresholds
+            for(size_t i = 0; i < nodes.size(); i++){
+                if(nodes[i].size() > 1){
+                    std::vector<hit> cluster;
+                        for(size_t j = 0; j < nodes[i].size(); j++){
+                            cluster.push_back(match[nodes[i][j]]);
+                        }
+                    unsigned int m = findConservedPairs(cluster);
+                    int span = findSpan(cluster);
+                    double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
+                    double pOrd = orderingPval(cluster.size(),m);
+                    bool isConservedOrder = (cluster.size() == m + 1) ? 1 : 0;
+                    if(pClu < 0.01 && (pOrd < 0.01 || isConservedOrder)){ // par.pCluThr,par.pOrdThr;
+                        headerBuffer.append(SSTR(qSet));
+                        headerBuffer.append("\t");
+                        headerBuffer.append(SSTR(tSet));
+                        headerBuffer.append("\t");
+                        headerBuffer.append(SSTR(pClu));
+                        headerBuffer.append("\t");
+                        headerBuffer.append(SSTR(pOrd));
+                        headerBuffer.append("\t");
+                        headerBuffer.append(SSTR(cluster.size()));
+                        headerBuffer.append("\n");
+                        for(size_t i = 0; i < cluster.size(); i++){
+                            buffer.append(SSTR(cluster[i].qId));
+                            buffer.append("\t");
+                            buffer.append(SSTR(cluster[i].tId));
+                            buffer.append("\n");
+                        }
+                    writer.writeData(buffer.c_str(), buffer.length(), cluster_idx, thread_idx);
+                    headerWriter.writeData(headerBuffer.c_str(), headerBuffer.length(), cluster_idx, thread_idx);
+                    cluster_idx++;
+                    buffer.clear();
+                    headerBuffer.clear();
+                    }
+                }
+            }
 
-            
             delete[] DistMat;
             match.clear();
-
-            dbw.writeData(buffer.c_str(), buffer.length(), resultReader.getDbKey(i), thread_idx);
-            buffer.clear();
         }
     }
-    dbw.close(true);
+    writer.close(true);
+    headerWriter.close(true);
     resultReader.close();
     headerReader.close();
 
