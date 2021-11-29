@@ -11,7 +11,7 @@ void setMultiHitSearchWorkflowDefaults(Parameters *p) {
     // TODO: Check query cov maybe?
     p->covThr = 0.8;
     p->evalThr = 10;
-
+    
     // TODO: Needs to be more than the count of target sets (10x?)
     p->maxSequences = 1500;
 
@@ -75,6 +75,8 @@ int multihitsearch(int argc, const char **argv, const Command &command) {
     if (par.removeTmpFiles) {
         cmd.addVariable("REMOVE_TMP", "TRUE");
     }
+    cmd.addVariable("USE_PROFILE", par.profileClusterSearch == 1 ? "TRUE" : NULL);
+    cmd.addVariable("CLUSTER_PAR", par.createParameterString(par.clusterworkflow).c_str());
     cmd.addVariable("SEARCH_PAR", par.createParameterString(par.searchworkflow).c_str());
     cmd.addVariable("BESTHITBYSET_PAR", par.createParameterString(par.besthitbyset).c_str());
     cmd.addVariable("COMBINEPVALPERSET_PAR", par.createParameterString(par.combinepvalperset).c_str());

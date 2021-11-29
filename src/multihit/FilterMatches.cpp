@@ -94,59 +94,54 @@ int filtermatches(int argc, const char **argv, const Command& command) {
                 unsigned int targetSetKey = Util::fast_atoi<unsigned int>(entry[0]);
                 unsigned int tsetSize = Util::fast_atoi<unsigned int>(tsizeReader.getDataByDBKey(targetSetKey, thread_idx));
                 //Decide if to filter out all hits if qsetkey == tsetkey
-                //TODO: delete the following if statement when self matches are filtered out in search
-                //TODO: disable if no self matches
-                if(qsetKey != targetSetKey) {
-                    //Add hit count, qset_size and tset_size to new header 
-                    size_t hitCount = 0;
-                    header.append(SSTR(qsetKey));
-                    header.append("\t");
-                    header.append(SSTR(targetSetKey));
-                    header.append("\t");
-                    header.append(entry[1], entry[2] - entry[1]);
-                    char *data = resultData;//resultReader.getDataByDBKey(matchKey, thread_idx);
-                    while (*data != '\0') {
-                        //entry is rewritten here
-                        columns = Util::getWordsOfLine(data, entry, 255);
-                        unsigned int tid = Util::fast_atoi<unsigned int>(entry[1]);
-                        unsigned int tsetKey = Util::fast_atoi<unsigned int>(tsetReader.getDataByDBKey(tid, thread_idx));
-                        if(tsetKey != targetSetKey) {
-                            data = Util::skipLine(data);
-                            continue;
-                        }
-                        double logPval = strtod(entry[2], NULL);
-                        if (logPval >= logPvalThr && logPval >= log(par.bhPvalThr)) {
-                            data = Util::skipLine(data);
-                            continue;
-                        }
-                        //(qsetid, tsetid,) qid, tid, p/e-value + rest of alignment info
+                //Add hit count, qset_size and tset_size to new header 
+                size_t hitCount = 0;
+                header.append(SSTR(qsetKey));
+                header.append("\t");
+                header.append(SSTR(targetSetKey));
+                header.append("\t");
+                header.append(entry[1], entry[2] - entry[1]);
+                char *data = resultData;//resultReader.getDataByDBKey(matchKey, thread_idx);
+                while (*data != '\0') {
+                    //entry is rewritten here
+                    columns = Util::getWordsOfLine(data, entry, 255);
+                    unsigned int tid = Util::fast_atoi<unsigned int>(entry[1]);
+                    unsigned int tsetKey = Util::fast_atoi<unsigned int>(tsetReader.getDataByDBKey(tid, thread_idx));
+                    if(tsetKey != targetSetKey) {
                         data = Util::skipLine(data);
-                        buffer.append(entry[0], entry[1] - entry[0] - 1);
-                        buffer.append("\t");
-                        buffer.append(entry[1], entry[2] - entry[1] - 1);
-                        buffer.append("\t");
-                        buffer.append(SSTR(exp(logPval)));
-                        buffer.append("\t");
-                        buffer.append(entry[3], data - entry[3]);
-                        hitCount++;
+                        continue;
                     }
-                    if (buffer.back() != '\n'){
-                        buffer.append("\n");
+                    double logPval = strtod(entry[2], NULL);
+                    if (logPval >= logPvalThr && logPval >= log(par.bhPvalThr)) {
+                        data = Util::skipLine(data);
+                        continue;
                     }
-                    header.append("\t");
-                    header.append(SSTR(hitCount));
-                    header.append("\t");
-                    header.append(SSTR(setSize)); //q set size
-                    header.append("\t");
-                    header.append(SSTR(tsetSize)); //t set size
-                    header.append("\n");
-                    dbwriter.writeData(buffer.c_str(), buffer.length(), match_idx, thread_idx);
-                    headerWriter.writeData(header.c_str(), header.length(), match_idx, thread_idx);
-                    match_idx++;
-                    buffer.clear();
-                    header.clear();
+                    //(qsetid, tsetid,) qid, tid, p/e-value + rest of alignment info
+                    data = Util::skipLine(data);
+                    buffer.append(entry[0], entry[1] - entry[0] - 1);
+                    buffer.append("\t");
+                    buffer.append(entry[1], entry[2] - entry[1] - 1);
+                    buffer.append("\t");
+                    buffer.append(SSTR(exp(logPval)));
+                    buffer.append("\t");
+                    buffer.append(entry[3], data - entry[3]);
+                    hitCount++;
                 }
-
+                if (buffer.back() != '\n'){
+                    buffer.append("\n");
+                }
+                header.append("\t");
+                header.append(SSTR(hitCount));
+                header.append("\t");
+                header.append(SSTR(setSize)); //q set size
+                header.append("\t");
+                header.append(SSTR(tsetSize)); //t set size
+                header.append("\n");
+                dbwriter.writeData(buffer.c_str(), buffer.length(), match_idx, thread_idx);
+                headerWriter.writeData(header.c_str(), header.length(), match_idx, thread_idx);
+                match_idx++;
+                buffer.clear();
+                header.clear();
             }
         }
     }

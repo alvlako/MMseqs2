@@ -224,6 +224,11 @@ Parameters::Parameters():
         PARAM_SHORT_OUTPUT(PARAM_SHORT_OUTPUT_ID, "--short-output", "Short output", "The output database will contain only the spread p-value", typeid(bool), (void *) &shortOutput, ""),
         PARAM_AGGREGATION_MODE(PARAM_AGGREGATION_MODE_ID, "--aggregation-mode", "Aggregation mode", "Combined P-values computed from 0: multi-hit, 1: minimum of all P-values, 2: product-of-P-values, 3: truncated product", typeid(int), (void *) &aggregationMode, "^[0-4]{1}$"),
         PARAM_BESTHIT_PVAL(PARAM_BESTHIT_PVAL_ID, "--besthit-pval", "Besthit P-value cutoff", "Multihit best hit P-value threshold for clustering", typeid(float), (void *) &bhPvalThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
+        // clustersearch
+        PARAM_ORDER_PVAL(PARAM_ORDER_PVAL_ID, "--order-pval", "Ordering P-value cutoff", "Ordering P-value threshold for cluster match output", typeid(float), (void *) &pOrdThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
+        PARAM_CLUSTER_PVAL(PARAM_CLUSTER_PVAL_ID, "--cluster-pval", "Clustering P-value cutoff","Clustering P-value threshold for cluster match output", typeid(float), (void *) &pCluThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
+        PARAM_MAX_GENE_GAP(PARAM_MAX_GENE_GAP_ID, "--max-gene-gap", "Maximum gene gaps", "Maximum number of genes allowed between two clusters to merge", typeid(int), (void *) &maxGeneGaps, "^[1-9]{1}[0-9]*$"),
+        PARAM_PROFILE_CLUSTER_SEARCH(PARAM_PROFILE_CLUSTER_SEARCH_ID, "--profile-cluster-search", "Cluster search against profiles", "Perform profile(target)-sequence searches in clustersearch", typeid(bool), (void *) &profileClusterSearch, ""),
         // concatdb
         PARAM_PRESERVEKEYS(PARAM_PRESERVEKEYS_ID, "--preserve-keys", "Preserve the keys", "The keys of the two DB should be distinct, and they will be preserved in the concatenation", typeid(bool), (void *) &preserveKeysB, ""),
         PARAM_TAKE_LARGER_ENTRY(PARAM_TAKE_LARGER_ENTRY_ID, "--take-larger-entry", "Take the larger entry", "Only keep the larger entry (dataSize >) in the concatenation, both databases need the same keys in the index", typeid(bool), (void *) &takeLargerEntry, ""),
@@ -807,13 +812,17 @@ Parameters::Parameters():
     combinepvalperset.push_back(&PARAM_COMPRESSED);
     combinepvalperset.push_back(&PARAM_V);
 
+    // filtermatches
     filtermatches.push_back(&PARAM_BESTHIT_PVAL);
     filtermatches.push_back(&PARAM_ALPHA);
     filtermatches.push_back(&PARAM_THREADS);
     filtermatches.push_back(&PARAM_COMPRESSED);
     filtermatches.push_back(&PARAM_V);
 
-
+    // clusterhits
+    clusterhits.push_back(&PARAM_ORDER_PVAL);
+    clusterhits.push_back(&PARAM_CLUSTER_PVAL);
+    clusterhits.push_back(&PARAM_MAX_GENE_GAP);
     clusterhits.push_back(&PARAM_THREADS);
     clusterhits.push_back(&PARAM_COMPRESSED);
     clusterhits.push_back(&PARAM_V);
@@ -1263,6 +1272,8 @@ Parameters::Parameters():
     // multi hit search
     multihitsearch = combineList(searchworkflow, besthitbyset);
     multihitsearch = combineList(multihitsearch, combinepvalperset);
+    multihitsearch = combineList(multihitsearch, clusterhits);
+    multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
 
     clusterUpdateSearch = removeParameter(searchworkflow, PARAM_MAX_SEQS);
     clusterUpdateClust = removeParameter(clusterworkflow, PARAM_MAX_SEQS);
@@ -2337,12 +2348,18 @@ void Parameters::setDefaults() {
     beatsFirst = false;
 
 
-    //besthitperset
+    //  besthitperset
     simpleBestHit = true;
     alpha = 1;
     shortOutput = false;
     aggregationMode = 0;
     bhPvalThr = 0.0001;
+
+    //  clustersearch
+    maxGeneGaps = 3;
+    pOrdThr = 0.01;
+    pCluThr = 0.01;
+    profileClusterSearch = 0;
 
     // concatdbs
     preserveKeysB = false;

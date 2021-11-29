@@ -579,6 +579,12 @@ public:
     int aggregationMode;
     float bhPvalThr;
 
+    // clustersearch
+    int maxGeneGaps;
+    float pOrdThr;
+    float pCluThr;
+    bool profileClusterSearch;
+
     // mergedbs
     std::string mergePrefixes;
     bool mergeStopEmpty;
@@ -907,6 +913,12 @@ public:
     PARAMETER(PARAM_SHORT_OUTPUT)
     PARAMETER(PARAM_AGGREGATION_MODE)
     PARAMETER(PARAM_BESTHIT_PVAL)
+
+    //clustersearch
+    PARAMETER(PARAM_ORDER_PVAL)
+    PARAMETER(PARAM_CLUSTER_PVAL)
+    PARAMETER(PARAM_MAX_GENE_GAP)
+    PARAMETER(PARAM_PROFILE_CLUSTER_SEARCH)
 
     // concatdb
     PARAMETER(PARAM_PRESERVEKEYS)

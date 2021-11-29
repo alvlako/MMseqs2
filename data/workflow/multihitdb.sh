@@ -77,30 +77,6 @@ if [ "$("${MMSEQS}" dbtype "${OUTDB}")" = "Nucleotide" ]; then
             || fail "translatenucs failed"
     fi
 
-    # write extracted orfs locations on contig in alignment format
-#    if notExists "${OUTDB}_nucl_orf_aligned_to_contig.index"; then
-#        "${MMSEQS}" orftocontig "${OUTDB}_nucl" "${OUTDB}_nucl_orf" "${OUTDB}_nucl_orf_aligned_to_contig" \
-#            || fail "orftocontig step died"
-#    fi
-
-#    if notExists "${OUTDB}_nucl_orf_to_contig.index"; then
-#        # shellcheck disable=SC2086
-#        "${MMSEQS}" filterdb "${OUTDB}_nucl_orf_aligned_to_contig" "${OUTDB}_nucl_orf_to_contig" --trim-to-one-column --filter-regex "^.*$" ${THREADS_PAR} \
-#            || fail "filterdb failed"
-#    fi
-
-#    if notExists "${OUTDB}_member_to_set.index"; then
-#        # shellcheck disable=SC2086
-#        "${MMSEQS}" filterdb "${OUTDB}_nucl_orf_to_contig" "${OUTDB}_member_to_set" --mapping-file "${OUTDB}_nucl_contig_to_set.tsv" ${THREADS_PAR} \
-#            || fail "filterdb failed"
-#    fi
-
-#    if notExists "${OUTDB}_set_to_member.index"; then
-#        # shellcheck disable=SC2086
-#        "${MMSEQS}" swapdb "${OUTDB}_member_to_set" "${OUTDB}_set_to_member" ${SWAPDB_PAR} \
-#            || fail "swapdb failed"
-#    fi
-
     if notExists "${OUTDB}_set_size.index"; then
         # shellcheck disable=SC2086
         "${MMSEQS}" result2stats "${OUTDB}" "${OUTDB}" "${OUTDB}_set_to_member" "${OUTDB}_set_size" ${RESULT2STATS_PAR} \

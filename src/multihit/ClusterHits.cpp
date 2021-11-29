@@ -119,20 +119,6 @@ double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int N
     }
 }
 
-// std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const std::vector<hit> &matchList, int i, int j){
-//     std::vector<hit> cluster;
-//     //check if one node is empty, if so return an empty cluster
-//     if(nodeList[i].size() != 0 && nodeList[j].size() != 0 ){
-//         for(size_t m = 0; m < nodeList[i].size(); m++){
-//             cluster.push_back(matchList[nodeList[i][m]]);
-//         }
-//         for(size_t n = 0; n < nodeList[j].size(); n++){
-//             cluster.push_back(matchList[nodeList[j][n]]);
-//         }
-//     }
-//     return cluster;
-// }
-
 //TODO: make this step more efficient
 bool isCompatibleCluster(std::vector<hit> &cluster1, std::vector<hit> &cluster2, unsigned int d){
     unsigned int iMax1 = 0;
@@ -245,16 +231,16 @@ Debug::Progress progress(resultReader.getSize());
         thread_idx = omp_get_thread_num();
 #endif
         std::string buffer;
-        buffer.reserve(10 * 1024);
+        buffer.reserve(100 * 1024);
         std::string headerBuffer;
-        buffer.reserve(10 * 1024);
+        headerBuffer.reserve(1024);
         std::string header;
         header.reserve(1024);
+
         const char *entry[255];
         unsigned int cluster_idx = 0;
 
-
-        const unsigned int d = 3; //par.maxGaps, d is the maximum number of genes allowed between two clusters to merge
+        const unsigned int d = par.maxGeneGaps; //par.maxGeneGaps, d is the maximum number of genes allowed between two clusters to merge
 #pragma omp for schedule(dynamic, 10)
         for (size_t i = 0; i < resultReader.getSize(); ++i) {
             progress.updateProgress();
@@ -308,6 +294,10 @@ Debug::Progress progress(resultReader.getSize());
             //int K = Util::fast_atoi<int>(hdrcolumns[3].c_str());//total number of hits
             size_t K = match.size(); 
 
+            if(K == 1){
+                continue;
+            }
+
             //initiallize distance matrix to be [K][K]
             double** DistMat = new double*[K]; // Rows
             for (size_t i = 0; i < K; i++)
@@ -353,6 +343,14 @@ Debug::Progress progress(resultReader.getSize());
 
                 maxScore = DistMat[i1][i2];
 
+                if(maxScore != 0){
+                    if(isFirstIter){
+                        sMin = maxScore;
+                        isFirstIter = false;
+                    }
+                } else {
+                    break;
+                    }
                 
                 //delete node i2 and append all elements in i2 to i1
                 for(size_t n = 0; n < nodes[i2].size() ;n++){
@@ -391,10 +389,7 @@ Debug::Progress progress(resultReader.getSize());
                     }
 
                 }
-                if(isFirstIter){
-                    sMin = maxScore;
-                    isFirstIter = false;
-                }
+
             }
 
             //print qid & tid of clusters with >=2 hits and cluster + order P-values greater than thresholds
@@ -409,7 +404,7 @@ Debug::Progress progress(resultReader.getSize());
                     double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
                     double pOrd = orderingPval(cluster.size(),m);
                     bool isConservedOrder = (cluster.size() == m + 1) ? 1 : 0;
-                    if(pClu < 0.01 && (pOrd < 0.01 || isConservedOrder)){ // par.pCluThr,par.pOrdThr;
+                    if(pClu < par.pCluThr && (pOrd < par.pOrdThr)){ // par.pCluThr,par.pOrdThr;
                         headerBuffer.append(SSTR(qSet));
                         headerBuffer.append("\t");
                         headerBuffer.append(SSTR(tSet));

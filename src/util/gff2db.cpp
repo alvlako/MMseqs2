@@ -153,7 +153,7 @@ int gff2db(int argc, const char **argv, const Command &command) {
                 } else {
                     size_t len = snprintf(buffer, sizeof(buffer), "%u\t%s_%zu_%zu_%zu\t%zu\n", key, name.c_str(), idx, end, start, i);
                     lookupWriter.writeData(buffer, len, thread_idx, false, false);
-                    for (size_t i = end - 1 ; i >= end - length; i--) {
+                    for (size_t i = end - 1 ; i > end - length; i--) {
                         revStr.append(1, Orf::complement(seq[i]));
                     }
                     writer.writeAdd(revStr.c_str(), revStr.size(), thread_idx);
