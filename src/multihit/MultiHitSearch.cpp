@@ -23,6 +23,7 @@ void setMultiHitSearchWorkflowDefaults(Parameters *p) {
     p->alnLenThr = 30;
     // Set alignment mode
     p->alignmentMode = Parameters::ALIGNMENT_MODE_SCORE_COV; 
+    p->addBacktrace = 1;
 }
 
 int multihitsearch(int argc, const char **argv, const Command &command) {
@@ -77,7 +78,13 @@ int multihitsearch(int argc, const char **argv, const Command &command) {
     }
     cmd.addVariable("USE_PROFILE", par.profileClusterSearch == 1 ? "TRUE" : NULL);
     cmd.addVariable("CLUSTER_PAR", par.createParameterString(par.clusterworkflow).c_str());
-    cmd.addVariable("SEARCH_PAR", par.createParameterString(par.searchworkflow).c_str());
+    std::vector<MMseqsParameter*> searchwithoutnumiter;
+    for (size_t i = 0; i < par.searchworkflow.size(); i++) {
+        if (par.searchworkflow[i]->uniqid != par.PARAM_NUM_ITERATIONS.uniqid) {
+            searchwithoutnumiter.push_back(par.searchworkflow[i]);
+        }
+    }
+    cmd.addVariable("SEARCH_PAR", par.createParameterString(searchwithoutnumiter).c_str());
     cmd.addVariable("BESTHITBYSET_PAR", par.createParameterString(par.besthitbyset).c_str());
     cmd.addVariable("COMBINEPVALPERSET_PAR", par.createParameterString(par.combinepvalperset).c_str());
     cmd.addVariable("THREADS_PAR", par.createParameterString(par.onlythreads).c_str());
