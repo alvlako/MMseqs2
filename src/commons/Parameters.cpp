@@ -823,6 +823,7 @@ Parameters::Parameters():
     clusterhits.push_back(&PARAM_ORDER_PVAL);
     clusterhits.push_back(&PARAM_CLUSTER_PVAL);
     clusterhits.push_back(&PARAM_MAX_GENE_GAP);
+    clusterhits.push_back(&PARAM_CLUSTER_SIZE);
     clusterhits.push_back(&PARAM_THREADS);
     clusterhits.push_back(&PARAM_COMPRESSED);
     clusterhits.push_back(&PARAM_V);
