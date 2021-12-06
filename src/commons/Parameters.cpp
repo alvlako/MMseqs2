@@ -228,6 +228,7 @@ Parameters::Parameters():
         PARAM_ORDER_PVAL(PARAM_ORDER_PVAL_ID, "--order-pval", "Ordering P-value cutoff", "Ordering P-value threshold for cluster match output", typeid(float), (void *) &pOrdThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_CLUSTER_PVAL(PARAM_CLUSTER_PVAL_ID, "--cluster-pval", "Clustering P-value cutoff","Clustering P-value threshold for cluster match output", typeid(float), (void *) &pCluThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_MAX_GENE_GAP(PARAM_MAX_GENE_GAP_ID, "--max-gene-gap", "Maximum gene gaps", "Maximum number of genes allowed between two clusters to merge", typeid(int), (void *) &maxGeneGaps, "^[1-9]{1}[0-9]*$"),
+        PARAM_CLUSTER_SIZE(PARAM_CLUSTER_SIZE_ID, "--cluster-size", "Minimal cluster size", "Minimum number of genes to define cluster", typeid(int), (void *) &clusterSize, "^[1-9]{1}[0-9]*$"),
         PARAM_PROFILE_CLUSTER_SEARCH(PARAM_PROFILE_CLUSTER_SEARCH_ID, "--profile-cluster-search", "Cluster search against profiles", "Perform profile(target)-sequence searches in clustersearch", typeid(bool), (void *) &profileClusterSearch, ""),
         // concatdb
         PARAM_PRESERVEKEYS(PARAM_PRESERVEKEYS_ID, "--preserve-keys", "Preserve the keys", "The keys of the two DB should be distinct, and they will be preserved in the concatenation", typeid(bool), (void *) &preserveKeysB, ""),
