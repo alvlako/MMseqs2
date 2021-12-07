@@ -581,6 +581,7 @@ public:
 
     // clustersearch
     int maxGeneGaps;
+    int clusterSize;
     float pOrdThr;
     float pCluThr;
     bool profileClusterSearch;
@@ -919,6 +920,7 @@ public:
     PARAMETER(PARAM_CLUSTER_PVAL)
     PARAMETER(PARAM_MAX_GENE_GAP)
     PARAMETER(PARAM_PROFILE_CLUSTER_SEARCH)
+    PARAMETER(PARAM_CLUSTER_SIZE)
 
     // concatdb
     PARAMETER(PARAM_PRESERVEKEYS)
