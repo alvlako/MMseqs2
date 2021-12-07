@@ -403,7 +403,7 @@ Debug::Progress progress(resultReader.getSize());
                     int span = findSpan(cluster);
                     double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
                     double pOrd = orderingPval(cluster.size(),m);
-                    bool isConservedOrder = (cluster.size() == m + 1) ? 1 : 0;
+                    bool isConservedOrder = (cluster.size() == par.clusterSize) ? 1 : 0;
                     if(pClu < par.pCluThr && (pOrd < par.pOrdThr)){ // par.pCluThr,par.pOrdThr;
                         headerBuffer.append(SSTR(qSet));
                         headerBuffer.append("\t");
