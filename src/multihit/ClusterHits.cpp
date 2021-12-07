@@ -241,6 +241,7 @@ Debug::Progress progress(resultReader.getSize());
         unsigned int cluster_idx = 0;
 
         const unsigned int d = par.maxGeneGaps; //par.maxGeneGaps, d is the maximum number of genes allowed between two clusters to merge
+        const unsigned int cls = par.clusterSize;
 #pragma omp for schedule(dynamic, 10)
         for (size_t i = 0; i < resultReader.getSize(); ++i) {
             progress.updateProgress();
@@ -394,7 +395,7 @@ Debug::Progress progress(resultReader.getSize());
 
             //print qid & tid of clusters with >=2 hits and cluster + order P-values greater than thresholds
             for(size_t i = 0; i < nodes.size(); i++){
-                if(nodes[i].size() > 1){
+                if(nodes[i].size() > cls){
                     std::vector<hit> cluster;
                         for(size_t j = 0; j < nodes[i].size(); j++){
                             cluster.push_back(match[nodes[i][j]]);
@@ -403,7 +404,7 @@ Debug::Progress progress(resultReader.getSize());
                     int span = findSpan(cluster);
                     double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
                     double pOrd = orderingPval(cluster.size(),m);
-                    bool isConservedOrder = (cluster.size() == par.clusterSize) ? 1 : 0;
+                    bool isConservedOrder = (cluster.size() == cls + 1) ? 1 : 0;
                     if(pClu < par.pCluThr && (pOrd < par.pOrdThr)){ // par.pCluThr,par.pOrdThr;
                         headerBuffer.append(SSTR(qSet));
                         headerBuffer.append("\t");
