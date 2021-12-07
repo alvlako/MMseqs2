@@ -581,10 +581,10 @@ public:
 
     // clustersearch
     int maxGeneGaps;
+    int clusterSize;
     float pOrdThr;
     float pCluThr;
     bool profileClusterSearch;
-    int clusterSize;
 
     // mergedbs
     std::string mergePrefixes;
