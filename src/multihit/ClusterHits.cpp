@@ -224,6 +224,7 @@ int clusterhits(int argc, const char **argv, const Command &command) {
 
 
 Debug::Progress progress(resultReader.getSize());
+unsigned int cluster_idx = 0;
 #pragma omp parallel
     {
         int thread_idx = 0;
@@ -238,7 +239,7 @@ Debug::Progress progress(resultReader.getSize());
         header.reserve(1024);
 
         const char *entry[255];
-        unsigned int cluster_idx = 0;
+        
 
         const unsigned int d = par.maxGeneGaps; //par.maxGeneGaps, d is the maximum number of genes allowed between two clusters to merge
         const unsigned int cls = par.clusterSize;
