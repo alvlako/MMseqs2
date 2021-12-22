@@ -2372,7 +2372,7 @@ void Parameters::setDefaults() {
 
     //  clustersearch
     maxGeneGaps = 3;
-    clusterSize = 1;
+    clusterSize = 2;
     pOrdThr = 0.01;
     pCluThr = 0.01;
     profileClusterSearch = 0;
