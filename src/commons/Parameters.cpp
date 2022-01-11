@@ -1286,6 +1286,7 @@ Parameters::Parameters():
     // multi hit search
     multihitsearch = combineList(searchworkflow, besthitbyset);
     multihitsearch = combineList(multihitsearch, combinepvalperset);
+    multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch = combineList(multihitsearch, clusterhits);
     multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
 
@@ -2368,7 +2369,7 @@ void Parameters::setDefaults() {
     alpha = 1;
     shortOutput = false;
     aggregationMode = 0;
-    bhPvalThr = 0.0001;
+    bhPvalThr = 1;
 
     //  clustersearch
     maxGeneGaps = 3;
