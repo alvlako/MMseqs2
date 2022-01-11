@@ -89,13 +89,6 @@ if notExists "${TMP_PATH}/cEval.index"; then
         || fail "combinepvalperset failed"
 fi
 
-#TODO: check if this step is needed at all
-if notExists "${TMP_PATH}/match.index"; then
-    # shellcheck disable=SC2086
-    #TODO: parameterize cEval_thr
-    "${MMSEQS}" filterdb "${TMP_PATH}/cEval" "${TMP_PATH}/match" --filter-column "2" --comparison-operator "le" --comparison-value "0.01" ${THREADS_PAR} \
-        || fail "filterdb failed"
-fi
 
 #TODO: check if comebinepvalperset can handle qid being in the first column, if so, add prefix to prior to aggregate_merged
 if notExists "${TMP_PATH}/aggregate_prefixed.index"; then
@@ -112,7 +105,7 @@ fi
 
 if notExists "${TMP_PATH}/matches.index"; then
     # shellcheck disable=SC2086
-    "${MMSEQS}" filtermatches "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_prefixed_merged" "${TMP_PATH}/match" "${TMP_PATH}/matches" ${THREADS_PAR} \
+    "${MMSEQS}" filtermatches "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_prefixed_merged" "${TMP_PATH}/cEval" "${TMP_PATH}/matches" ${THREADS_PAR} \
         || fail "filtermatches failed"
 fi
 
