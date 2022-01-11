@@ -1328,6 +1328,10 @@ Parameters::Parameters():
     tar2db.push_back(&PARAM_THREADS);
     tar2db.push_back(&PARAM_V);
 
+    // appenddbtoindex
+    appenddbtoindex.push_back(&PARAM_ID_LIST);
+    appenddbtoindex.push_back(&PARAM_V);
+
     //checkSaneEnvironment();
     setDefaults();
 }
