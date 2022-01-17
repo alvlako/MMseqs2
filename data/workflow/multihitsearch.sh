@@ -112,13 +112,13 @@ fi
 
 if notExists "${TMP_PATH}/matches.index"; then
     # shellcheck disable=SC2086
-    "${MMSEQS}" filtermatches "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_prefixed_merged" "${TMP_PATH}/match" "${TMP_PATH}/matches" ${THREADS_PAR} \
+    "${MMSEQS}" filtermatches "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_prefixed_merged" "${TMP_PATH}/match" "${TMP_PATH}/matches" ${FILTERMATCHES_PAR} \
         || fail "filtermatches failed"
 fi
 
 if notExists "${TMP_PATH}/clusters.index"; then
     # shellcheck disable=SC2086
-    "${MMSEQS}" clusterhits "${QUERY}" "${TARGET}" "${TMP_PATH}/matches" "${OUTPUT}" ${CLUSTERHIT_PAR} \
+    "${MMSEQS}" clusterhits "${QUERY}" "${TARGET}" "${TMP_PATH}/matches" "${OUTPUT}" ${CLUSTERHITS_PAR} \
         || fail "clusterhits failed"
 fi
 

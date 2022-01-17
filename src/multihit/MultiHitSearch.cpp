@@ -13,7 +13,7 @@ void setMultiHitSearchWorkflowDefaults(Parameters *p) {
     p->evalThr = 10;
     
     // TODO: Needs to be more than the count of target sets (10x?)
-    p->maxSequences = 1500;
+    //p->maxSequences = 1500;
 
     // TODO: Why??
     //p->scoreBias = 0.3;
@@ -87,6 +87,8 @@ int multihitsearch(int argc, const char **argv, const Command &command) {
     cmd.addVariable("SEARCH_PAR", par.createParameterString(searchwithoutnumiter).c_str());
     cmd.addVariable("BESTHITBYSET_PAR", par.createParameterString(par.besthitbyset).c_str());
     cmd.addVariable("COMBINEPVALPERSET_PAR", par.createParameterString(par.combinepvalperset).c_str());
+    cmd.addVariable("FILTERMATCHES_PAR", par.createParameterString(par.filtermatches).c_str());
+    cmd.addVariable("CLUSTERHITS_PAR", par.createParameterString(par.clusterhits).c_str());
     cmd.addVariable("THREADS_PAR", par.createParameterString(par.onlythreads).c_str());
     cmd.addVariable("VERBOSITY", par.createParameterString(par.onlyverbosity).c_str());
 

@@ -1286,8 +1286,8 @@ Parameters::Parameters():
     // multi hit search
     multihitsearch = combineList(searchworkflow, besthitbyset);
     multihitsearch = combineList(multihitsearch, combinepvalperset);
-    multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch = combineList(multihitsearch, clusterhits);
+    multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
 
     clusterUpdateSearch = removeParameter(searchworkflow, PARAM_MAX_SEQS);
