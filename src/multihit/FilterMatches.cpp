@@ -137,9 +137,9 @@ int filtermatches(int argc, const char **argv, const Command& command) {
                 header.append("\t");
                 header.append(SSTR(tsetSize)); //t set size
                 header.append("\n");
-                dbwriter.writeData(buffer.c_str(), buffer.length(), match_idx, thread_idx);
-                headerWriter.writeData(header.c_str(), header.length(), match_idx, thread_idx);
-                match_idx++;
+                unsigned int key = __sync_fetch_and_add(&(match_idx), 1);
+                dbwriter.writeData(buffer.c_str(), buffer.length(), key, thread_idx);
+                headerWriter.writeData(header.c_str(), header.length(), key, thread_idx);
                 buffer.clear();
                 header.clear();
             }

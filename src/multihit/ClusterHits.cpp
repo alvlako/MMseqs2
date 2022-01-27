@@ -423,9 +423,9 @@ unsigned int cluster_idx = 0;
                             buffer.append(SSTR(cluster[i].tId));
                             buffer.append("\n");
                         }
-                    writer.writeData(buffer.c_str(), buffer.length(), cluster_idx, thread_idx);
-                    headerWriter.writeData(headerBuffer.c_str(), headerBuffer.length(), cluster_idx, thread_idx);
-                    cluster_idx++;
+                    unsigned int key = __sync_fetch_and_add(&(cluster_idx), 1);
+                    writer.writeData(buffer.c_str(), buffer.length(), key, thread_idx);
+                    headerWriter.writeData(headerBuffer.c_str(), headerBuffer.length(), key, thread_idx);
                     buffer.clear();
                     headerBuffer.clear();
                     }
