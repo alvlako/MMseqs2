@@ -581,6 +581,7 @@ public:
     bool shortOutput;
     int aggregationMode;
     float bhPvalThr;
+    bool filterSelfMatch;
 
     // clustersearch
     int maxGeneGaps;
@@ -919,6 +920,7 @@ public:
     PARAMETER(PARAM_SHORT_OUTPUT)
     PARAMETER(PARAM_AGGREGATION_MODE)
     PARAMETER(PARAM_BESTHIT_PVAL)
+    PARAMETER(PARAM_FILTER_SELF_MATCH)
 
     //clustersearch
     PARAMETER(PARAM_ORDER_PVAL)

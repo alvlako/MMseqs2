@@ -227,6 +227,7 @@ Parameters::Parameters():
         PARAM_SHORT_OUTPUT(PARAM_SHORT_OUTPUT_ID, "--short-output", "Short output", "The output database will contain only the spread p-value", typeid(bool), (void *) &shortOutput, ""),
         PARAM_AGGREGATION_MODE(PARAM_AGGREGATION_MODE_ID, "--aggregation-mode", "Aggregation mode", "Combined P-values computed from 0: multi-hit, 1: minimum of all P-values, 2: product-of-P-values, 3: truncated product", typeid(int), (void *) &aggregationMode, "^[0-4]{1}$"),
         PARAM_BESTHIT_PVAL(PARAM_BESTHIT_PVAL_ID, "--besthit-pval", "Besthit P-value cutoff", "Multihit best hit P-value threshold for clustering", typeid(float), (void *) &bhPvalThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
+        PARAM_FILTER_SELF_MATCH(PARAM_FILTER_SELF_MATCH_ID, "--filter-self-match", "Filter self match", "Remove hits between the same set. 0: do not filter, 1: filter", typeid(bool), (void *) &filterSelfMatch, ""),
         // clustersearch
         PARAM_ORDER_PVAL(PARAM_ORDER_PVAL_ID, "--order-pval", "Ordering P-value cutoff", "Ordering P-value threshold for cluster match output", typeid(float), (void *) &pOrdThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_CLUSTER_PVAL(PARAM_CLUSTER_PVAL_ID, "--cluster-pval", "Clustering P-value cutoff","Clustering P-value threshold for cluster match output", typeid(float), (void *) &pCluThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
@@ -840,6 +841,7 @@ Parameters::Parameters():
     // filtermatches
     filtermatches.push_back(&PARAM_BESTHIT_PVAL);
     filtermatches.push_back(&PARAM_ALPHA);
+    filtermatches.push_back(&PARAM_FILTER_SELF_MATCH);
     filtermatches.push_back(&PARAM_THREADS);
     filtermatches.push_back(&PARAM_COMPRESSED);
     filtermatches.push_back(&PARAM_V);

@@ -94,6 +94,9 @@ int filtermatches(int argc, const char **argv, const Command& command) {
                 unsigned int targetSetKey = Util::fast_atoi<unsigned int>(entry[0]);
                 unsigned int tsetSize = Util::fast_atoi<unsigned int>(tsizeReader.getDataByDBKey(targetSetKey, thread_idx));
                 //Decide if to filter out all hits if qsetkey == tsetkey
+                if(par.filterSelfMatch && qsetKey == targetSetKey) {
+                    continue;
+                }
                 //Add hit count, qset_size and tset_size to new header 
                 size_t hitCount = 0;
                 header.append(SSTR(qsetKey));
