@@ -431,7 +431,10 @@ unsigned int cluster_idx = 0;
                     }
                 }
             }
-
+            // deallocate memory using the delete operator
+            for (size_t i = 0; i < K; i++) {
+                delete[] DistMat[i];
+            }
             delete[] DistMat;
             match.clear();
         }
