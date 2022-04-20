@@ -851,6 +851,7 @@ Parameters::Parameters():
     clusterhits.push_back(&PARAM_CLUSTER_PVAL);
     clusterhits.push_back(&PARAM_MAX_GENE_GAP);
     clusterhits.push_back(&PARAM_CLUSTER_SIZE);
+    clusterhits.push_back(&PARAM_DB_OUTPUT);
     clusterhits.push_back(&PARAM_THREADS);
     clusterhits.push_back(&PARAM_COMPRESSED);
     clusterhits.push_back(&PARAM_V);
@@ -1307,6 +1308,14 @@ Parameters::Parameters():
     multihitsearch = combineList(multihitsearch, clusterhits);
     multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
+
+    // iterative cluster search
+    iterativeclustersearch = combineList(searchworkflow, besthitbyset);
+    iterativeclustersearch = combineList(iterativeclustersearch, mergedbs);
+    iterativeclustersearch = combineList(iterativeclustersearch, subtractdbs);
+    iterativeclustersearch = combineList(iterativeclustersearch, combinepvalperset);
+    iterativeclustersearch = combineList(iterativeclustersearch, clusterhits);
+    iterativeclustersearch = combineList(iterativeclustersearch, filtermatches);
 
     clusterUpdateSearch = removeParameter(searchworkflow, PARAM_MAX_SEQS);
     clusterUpdateClust = removeParameter(clusterworkflow, PARAM_MAX_SEQS);

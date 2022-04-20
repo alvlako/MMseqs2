@@ -79,6 +79,7 @@ extern int sequence2profile(int argc, const char **argv, const Command& command)
 extern int msa2result(int argc, const char **argv, const Command& command);
 extern int multihitdb(int argc, const char **argv, const Command& command);
 extern int multihitsearch(int argc, const char **argv, const Command& command);
+extern int iterativeclustersearch(int argc, const char **argv, const Command& command);
 extern int nrtotaxmapping(int argc, const char **argv, const Command& command);
 extern int offsetalignment(int argc, const char **argv, const Command& command);
 extern int orftocontig(int argc, const char **argv, const Command& command);

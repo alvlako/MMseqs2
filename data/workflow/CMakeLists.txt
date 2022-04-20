@@ -18,6 +18,7 @@ set(GENERATED_WORKFLOWS
         workflow/taxpercontig.sh
         workflow/multihitdb.sh
         workflow/multihitsearch.sh
+        workflow/iterativeclustersearch.sh
         workflow/enrich.sh
         workflow/blastn.sh
         workflow/searchslicedtargetprofile.sh

@@ -13,5 +13,6 @@ set(multihit_source_files
         multihit/MultiHitSearch.cpp
         multihit/ClusterHits.cpp
         multihit/FilterMatches.cpp
+        multihit/IterativeClusterSearch.cpp
         PARENT_SCOPE
         )

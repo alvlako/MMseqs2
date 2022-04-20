@@ -200,7 +200,10 @@ int clusterhits(int argc, const char **argv, const Command &command) {
     DBReader<unsigned int> headerReader(par.hdr3.c_str(), par.hdr3Index.c_str(), par.threads, DBReader<unsigned int>::USE_INDEX|DBReader<unsigned int>::USE_DATA);
     headerReader.open(DBReader<unsigned int>::LINEAR_ACCCESS);
 
-    DBWriter writer(par.db4.c_str(), par.db4Index.c_str(), par.threads, par.compressed, resultReader.getDbtype());
+    const bool shouldCompress = par.dbOut == true && par.compressed == true;
+    const int dbType = par.dbOut == true ? resultReader.getDbtype() : Parameters::DBTYPE_OMIT_FILE;
+    const bool isDb = par.dbOut;
+    DBWriter writer(par.db4.c_str(), par.db4Index.c_str(), par.threads, shouldCompress, dbType);
     writer.open();
 
     DBWriter headerWriter(par.hdr4.c_str(), par.hdr4Index.c_str(), par.threads,  par.compressed, Parameters::DBTYPE_GENERIC_DB);
@@ -426,7 +429,7 @@ unsigned int cluster_idx = 0;
                             buffer.append(cluster[i].alignment);
                         }
                     unsigned int key = __sync_fetch_and_add(&(cluster_idx), 1);
-                    writer.writeData(buffer.c_str(), buffer.length(), key, thread_idx);
+                    writer.writeData(buffer.c_str(), buffer.length(), key, thread_idx,isDb);
                     headerWriter.writeData(headerBuffer.c_str(), headerBuffer.length(), key, thread_idx);
                     buffer.clear();
                     headerBuffer.clear();
@@ -442,6 +445,9 @@ unsigned int cluster_idx = 0;
         }
     }
     writer.close(true);
+    if (isDb == false) {
+        FileUtil::remove(par.db4Index.c_str());
+    }
     headerWriter.close(true);
     resultReader.close();
     headerReader.close();
