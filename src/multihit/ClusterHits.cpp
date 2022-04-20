@@ -59,8 +59,8 @@ double clusterPval_fast(int m, int K, int Nq, int Nt) {
 }
 
 
-double orderingPval(int k, int m){
-    return (1 - 1.0 * m / k)/(pow(2,m) * exp(lgamma(m+1)));
+double orderingPval(double* lookup, int k, int m){
+    return (1 - 1.0 * m / k)/(pow(2,m) * exp(lookup[m+1]));
 }
 
 
@@ -95,6 +95,12 @@ int findConservedPairs(std::vector<hit> &cluster){
     return m;
 }
 
+double computeWeight(double* lookup, int k, int K, int Nq, int Nt){
+    double factorNqNtK = Nq * Nt / K;
+    double w = (-lookup[k+1] + (k-1) * log(factorNqNtK)) / ((k-1) * log(2 * factorNqNtK));
+    return w;
+}
+
 double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int Nq, int Nt){
     if(cluster.size()== 0 ){
         return 0.0;
@@ -107,15 +113,15 @@ double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int N
         int m = findConservedPairs(cluster);
         if(k == 2){
             pClu = clusterPval_fast(span, K, Nq, Nt);
-            pOrd = orderingPval(k, m);
+            pOrd = orderingPval(lookup, k, m);
         }
         else{
             pClu = clusterPval(lookup, k, span, K, Nq, Nt);
-            pOrd = orderingPval(k, m);
+            pOrd = orderingPval(lookup, k, m);
         }
-        
+        double w = computeWeight(lookup, k, K, Nq, Nt);
         //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
-        return -log(pClu)- log(pOrd);
+        return - w * log(pClu) - (1 - w) * log(pOrd);
     }
 }
 
@@ -330,7 +336,8 @@ unsigned int cluster_idx = 0;
             //Score is determined by the maxscore in the first iteration, due to varying Nq & Nt      
             double maxScore = DBL_MAX;
             bool isFirstIter = true;
-            double sMin  = DBL_MAX;
+            double w = computeWeight(lGammaLookup, 2, K, Nq, Nt);
+            double sMin  = -w * log(clusterPval_fast(d+1, K, Nq, Nt)) - (1-w)* log(orderingPval(lGammaLookup,2,1));
             while(isFirstIter|| (maxScore >= sMin)){
                 size_t i1 = 0;
                 size_t i2;
@@ -347,7 +354,7 @@ unsigned int cluster_idx = 0;
 
                 if(maxScore != 0){
                     if(isFirstIter){
-                        sMin = maxScore;
+                        //sMin = maxScore;
                         isFirstIter = false;
                     }
                 } else {
@@ -404,7 +411,7 @@ unsigned int cluster_idx = 0;
                     unsigned int m = findConservedPairs(cluster);
                     int span = findSpan(cluster);
                     double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
-                    double pOrd = orderingPval(cluster.size(),m);
+                    double pOrd = orderingPval(lGammaLookup, cluster.size(),m);
                     //bool isConservedOrder = (cluster.size() == m + 1) ? 1 : 0;
                     if(pClu < par.pCluThr && (pOrd < par.pOrdThr)){ // par.pCluThr,par.pOrdThr;
                         headerBuffer.append(SSTR(qSet));
