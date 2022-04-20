@@ -11,8 +11,7 @@
 #endif
 
 struct hit{
-    unsigned int qId;
-    unsigned int tId;
+    std::string alignment;
     unsigned int qPos;
     unsigned int tPos;
     bool qStrand;
@@ -288,8 +287,7 @@ unsigned int cluster_idx = 0;
                 hit tmpHit;
 
                 //pos is the protein index in the genome, strand is determined by start and end coordinates
-                tmpHit.qId = qid;
-                tmpHit.tId = tid;
+                tmpHit.alignment = std::string(entry[0], data - entry[0]);
                 tmpHit.qPos = Util::fast_atoi<size_t>(qcolumns[qcolumns.size()-3].c_str());
                 tmpHit.tPos = Util::fast_atoi<size_t>(tcolumns[tcolumns.size()-3].c_str());
                 tmpHit.qStrand = (qStart < qEnd) ? 1 : 0;
@@ -425,10 +423,7 @@ unsigned int cluster_idx = 0;
                         headerBuffer.append(SSTR(cluster.size()));
                         headerBuffer.append("\n");
                         for(size_t i = 0; i < cluster.size(); i++){
-                            buffer.append(SSTR(cluster[i].qId));
-                            buffer.append("\t");
-                            buffer.append(SSTR(cluster[i].tId));
-                            buffer.append("\n");
+                            buffer.append(cluster[i].alignment);
                         }
                     unsigned int key = __sync_fetch_and_add(&(cluster_idx), 1);
                     writer.writeData(buffer.c_str(), buffer.length(), key, thread_idx);
