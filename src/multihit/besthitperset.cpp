@@ -52,7 +52,7 @@ public :
             if (pval == 0) {
                 pval = DBL_MIN;
             }
-            double score = -log(eval);
+            double score = std::min(DBL_MAX, -log(eval));
 
             //if only one hit use simple best hit
             if(simpleBestHitMode ||dataToAggregate.size() < 2) {
