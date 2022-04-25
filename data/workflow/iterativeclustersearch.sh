@@ -78,7 +78,7 @@ while [ $STEP -lt $NUM_IT ]; do
         if notExists "$TMP_PATH/aln_$STEP.done"; then
             STEPONE=$((STEP-1))
             #TODO: check if the aln_tmp_step contains any new hits, if not, exit prematurely
-            if [ -s "$TMP_PATH/aln_tmp_$STEP" ]; then 
+            if [ -s "$TMP_PATH/aln_tmp_$STEP.index" ]; then 
                 # shellcheck disable=SC2086
                 "$MMSEQS" mergedbs "${QUERY_STEP_0}" "$TMP_PATH/aln_$STEP" "$TMP_PATH/aln_$STEPONE" "$TMP_PATH/aln_tmp_$STEP" \
                     || fail "mergedbs died"
