@@ -11,10 +11,9 @@ void setIterativeClusterSearchWorkflowDefaults(Parameters *p) {
     // TODO: Check query cov maybe?
     p->covThr = 0.8;
     p->evalThr = 10;
-    
+    p->evalProfile = 10;
     // TODO: Needs to be more than the count of target sets (10x?)
     //p->maxSequences = 1500;
-
     // TODO: Why??
     //p->scoreBias = 0.3;
     p->simpleBestHit = false;
@@ -79,11 +78,30 @@ int iterativeclustersearch(int argc, const char **argv, const Command &command) 
     // if (par.removeTmpFiles) {
     //     cmd.addVariable("REMOVE_TMP", "TRUE");
     // }
-    //TODO:activate exhaustivesearch only for profiles?
     cmd.addVariable("NUM_IT", SSTR(par.numIterations).c_str());
+    cmd.addVariable("SUBSTRACT_PAR", par.createParameterString(par.subtractdbs).c_str());
+    double originalEval = par.evalThr;
+    par.evalThr = (par.evalThr < par.evalProfile) ? par.evalThr  : par.evalProfile;
+    for (int i = 0; i < par.numIterations; i++) {
+        if (i == 0) {
+            par.realign = true;
+        }
+        if (i > 0) {
+            //par.queryProfile = true;
+            par.realign = false;
+        }
+        if (i == (par.numIterations - 1)) {
+            par.evalThr = originalEval;
+        }
+        cmd.addVariable(std::string("PREFILTER_PAR_" + SSTR(i)).c_str(),
+                        par.createParameterString(par.prefilter).c_str());
+        cmd.addVariable(std::string("ALIGNMENT_PAR_" + SSTR(i)).c_str(),
+                        par.createParameterString(par.align).c_str());
+        cmd.addVariable(std::string("PROFILE_PAR_" + SSTR(i)).c_str(),
+                        par.createParameterString(par.result2profile).c_str());
+    }
     cmd.addVariable("MERGE_PAR", par.createParameterString(par.mergedbs).c_str());
-    cmd.addVariable("SUBTRACT_PAR", par.createParameterString(par.subtractdbs).c_str());
-    cmd.addVariable("SEARCH_PAR", par.createParameterString(par.searchworkflow).c_str());
+    //cmd.addVariable("SEARCH_PAR", par.createParameterString(par.searchworkflow).c_str());
     cmd.addVariable("BESTHITBYSET_PAR", par.createParameterString(par.besthitbyset).c_str());
     cmd.addVariable("COMBINEPVALPERSET_PAR", par.createParameterString(par.combinepvalperset).c_str());
     cmd.addVariable("FILTERMATCHES_PAR", par.createParameterString(par.filtermatches).c_str());
