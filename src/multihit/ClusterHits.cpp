@@ -12,6 +12,7 @@
 
 struct hit{
     std::string alignment;
+    double pval;
     unsigned int qPos;
     unsigned int tPos;
     bool qStrand;
@@ -172,6 +173,33 @@ std::vector<hit> groupNodes(const std::vector<std::vector<int>> &nodeList, const
 }
 
 
+double multihitPval(double* lookup, std::vector<hit> &cluster, int Nq, double alpha){
+    size_t k = 0;
+    double r = 0;
+    double pvalThreshold = alpha / (Nq + 1);
+    double logPvalThr = log(pvalThreshold);
+    for (size_t i = 0; i < cluster.size(); ++i) {
+        double logPvalue = log(cluster[i].pval);
+        if (logPvalue < logPvalThr) {
+            k++;
+            r -= logPvalue - logPvalThr;
+        }
+    }
+    //multihit edge case
+    if (r == 0) {
+        return 1.0;
+    }
+    if (std::isinf(r)) {
+        return 0.0;
+    }        
+    double expMinusR = exp(-r);
+    double sum = 0;
+    for (size_t i = 0; i < k - 1; ++i){
+        sum += pow(r,i)/exp(lookup[i+1]);
+    }
+    return expMinusR * sum;
+}
+
 int clusterhits(int argc, const char **argv, const Command &command) {
     Parameters &par = Parameters::getInstance();
     par.parseParameters(argc, argv, command, true, 0, 0);
@@ -291,6 +319,7 @@ unsigned int cluster_idx = 0;
 
                 //pos is the protein index in the genome, strand is determined by start and end coordinates
                 tmpHit.alignment = std::string(entry[0], data - entry[0]);
+                tmpHit.pval = std::strtod(entry[2], NULL);
                 tmpHit.qPos = Util::fast_atoi<size_t>(qcolumns[qcolumns.size()-3].c_str());
                 tmpHit.tPos = Util::fast_atoi<size_t>(tcolumns[tcolumns.size()-3].c_str());
                 tmpHit.qStrand = (qStart < qEnd) ? 1 : 0;
@@ -406,22 +435,19 @@ unsigned int cluster_idx = 0;
             for(size_t i = 0; i < nodes.size(); i++){
                 if(nodes[i].size() >= cls){
                     std::vector<hit> cluster;
-                        for(size_t j = 0; j < nodes[i].size(); j++){
-                            cluster.push_back(match[nodes[i][j]]);
-                        }
-                    unsigned int m = findConservedPairs(cluster);
-                    int span = findSpan(cluster);
-                    double pClu = clusterPval(lGammaLookup, cluster.size(), span, K, Nq, Nt);
-                    double pOrd = orderingPval(lGammaLookup, cluster.size(),m);
-                    //bool isConservedOrder = (cluster.size() == m + 1) ? 1 : 0;
-                    if(pClu < par.pCluThr && (pOrd < par.pOrdThr)){ // par.pCluThr,par.pOrdThr;
+                    for(size_t j = 0; j < nodes[i].size(); j++){
+                        cluster.push_back(match[nodes[i][j]]);
+                    }
+                    double pCO = exp(-clusterMatchScore(lGammaLookup, cluster, K, Nq, Nt));
+                    double pMH = multihitPval(lGammaLookup, cluster, Nq, par.alpha);
+                    if(pCO < par.pCluThr && (pMH < par.pMHThr)){ // par.pCluThr,par.pMultiHitThr;
                         headerBuffer.append(SSTR(qSet));
                         headerBuffer.append("\t");
                         headerBuffer.append(SSTR(tSet));
                         headerBuffer.append("\t");
-                        headerBuffer.append(SSTR(pClu));
+                        headerBuffer.append(SSTR(pCO));
                         headerBuffer.append("\t");
-                        headerBuffer.append(SSTR(pOrd));
+                        headerBuffer.append(SSTR(pMH));
                         headerBuffer.append("\t");
                         headerBuffer.append(SSTR(cluster.size()));
                         headerBuffer.append("\n");
