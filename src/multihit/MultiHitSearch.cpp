@@ -24,6 +24,7 @@ void setMultiHitSearchWorkflowDefaults(Parameters *p) {
     // Set alignment mode
     p->alignmentMode = Parameters::ALIGNMENT_MODE_SCORE_COV; 
     p->addBacktrace = 1;
+    p->dbOut = 1;
     //profile-sequence clustersearch
     if(p->profileClusterSearch == 1){
         p->exhaustiveSearch = 1;
