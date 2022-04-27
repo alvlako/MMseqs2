@@ -170,6 +170,13 @@ while [ $STEP -lt $NUM_IT ]; do
             # shellcheck disable=SC2086
             "${MMSEQS}" tsv2db "${TMP_PATH}/cluster_sorted_$STEP" "$3" --output-dbtype 5 ${VERBOSITY} \
                 || fail "tsv2db failed"
+
+            #TODO: parameterize
+            PARAM="PROFILE_PAR_$STEP"
+            eval TMP="\$$PARAM"
+            # shellcheck disable=SC2086
+            $RUNNER "$MMSEQS" result2profile "${QUERY}" "${TARGET}" "$3" "$3_profile" ${TMP} \
+                || fail "Create profile died"
         fi
 
         if [ -n "${REMOVE_TMP}" ]; then
