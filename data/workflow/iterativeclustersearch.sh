@@ -175,7 +175,7 @@ while [ $STEP -lt $NUM_IT ]; do
             PARAM="PROFILE_PAR_$STEP"
             eval TMP="\$$PARAM"
             # shellcheck disable=SC2086
-            $RUNNER "$MMSEQS" result2profile "${QUERY}" "${TARGET}" "$3" "$3_profile" ${TMP} \
+            $RUNNER "$MMSEQS" result2profile "${QUERY_STEP_0}" "${TARGET}" "$3" "$3_profile" ${TMP} \
                 || fail "Create profile died"
         fi
 
@@ -209,7 +209,7 @@ while [ $STEP -lt $NUM_IT ]; do
             PARAM="PROFILE_PAR_$STEP"
             eval TMP="\$$PARAM"
             # shellcheck disable=SC2086
-            $RUNNER "$MMSEQS" result2profile "${QUERY}" "${TARGET}" "$TMP_PATH/cluster_aln_$STEP" "$TMP_PATH/profile_$STEP" ${TMP} \
+            $RUNNER "$MMSEQS" result2profile "${QUERY_STEP_0}" "${TARGET}" "$TMP_PATH/cluster_aln_$STEP" "$TMP_PATH/profile_$STEP" ${TMP} \
                 || fail "Create profile died"
         fi
     fi
