@@ -121,7 +121,7 @@ double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int N
         }
         double w = computeWeight(lookup, k, K, Nq, Nt);
         //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
-        return - w * log(pClu) - (1 - w) * log(pOrd);
+        return - log(pClu) - log(pOrd);
     }
 }
 
